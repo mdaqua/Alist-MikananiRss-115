@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from loguru import logger
+
 import aiohttp
 import bs4
 from async_lru import alru_cache
