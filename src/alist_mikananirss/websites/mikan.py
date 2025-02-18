@@ -22,15 +22,10 @@ class Mikan(Website):
 
     @alru_cache(maxsize=128)
     async def parse_homepage(self, home_page_url: str) -> MikanHomePageInfo:
-        try:
-            async with aiohttp.ClientSession(trust_env=True) as session:
-                async with session.get(home_page_url) as response:
-                    response.raise_for_status()
-                    html = await response.text()
-        except aiohttp.ClientResponseError as e:
-            if e.status == 404:
-                logger.error(f"404 Not Found: {home_page_url}")
-            raise
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            async with session.get(home_page_url) as response:
+                response.raise_for_status()
+                html = await response.text()
         soup = bs4.BeautifulSoup(html, "html.parser")
         anime_name = soup.find("p", class_="bangumi-title").text.strip()
         fansub = None
@@ -69,31 +64,45 @@ class Mikan(Website):
     async def extract_resource_info(
         self, entry: FeedEntry, use_extractor: bool = False
     ) -> ResourceInfo:
-        homepage_info = await self.parse_homepage(entry.homepage_url)
-        resource_info = ResourceInfo(
-            anime_name=homepage_info.anime_name,
-            resource_title=entry.resource_title,
-            torrent_url=entry.torrent_url,
-            published_date=entry.published_date,
-            fansub=homepage_info.fansub,
-        )
-        if use_extractor:
-            name_extract_result = await Extractor.analyse_anime_name(
-                resource_info.anime_name
-            )
-            rtitle_extract_result = await Extractor.analyse_resource_title(
-                resource_info.resource_title, use_tmdb=False
-            )
+        try:
+            homepage_info = await self.parse_homepage(entry.homepage_url)
+        except Exception as e:
+            logger.error(f"Error parsing homepage for {entry.homepage_url}: {e}")
+            raise
+
+        try:
             resource_info = ResourceInfo(
-                anime_name=name_extract_result.anime_name,
-                season=name_extract_result.season,
-                episode=rtitle_extract_result.episode,
-                quality=rtitle_extract_result.quality,
-                languages=rtitle_extract_result.languages,
-                fansub=resource_info.fansub,
-                resource_title=resource_info.resource_title,
-                torrent_url=resource_info.torrent_url,
-                published_date=resource_info.published_date,
-                version=rtitle_extract_result.version,
+                anime_name=homepage_info.anime_name,
+                resource_title=entry.resource_title,
+                torrent_url=entry.torrent_url,
+                published_date=entry.published_date,
+                fansub=homepage_info.fansub,
             )
+        except Exception as e:
+            logger.error(f"Error creating ResourceInfo for {entry.resource_title}: {e}")
+            raise
+
+        if use_extractor:
+            try:
+                name_extract_result = await Extractor.analyse_anime_name(
+                    resource_info.anime_name
+                )
+                rtitle_extract_result = await Extractor.analyse_resource_title(
+                    resource_info.resource_title, use_tmdb=False
+                )
+                resource_info = ResourceInfo(
+                    anime_name=name_extract_result.anime_name,
+                    season=name_extract_result.season,
+                    episode=rtitle_extract_result.episode,
+                    quality=rtitle_extract_result.quality,
+                    languages=rtitle_extract_result.languages,
+                    fansub=resource_info.fansub,
+                    resource_title=resource_info.resource_title,
+                    torrent_url=resource_info.torrent_url,
+                    published_date=resource_info.published_date,
+                    version=rtitle_extract_result.version,
+                )
+            except Exception as e:
+                logger.error(f"Error extracting additional info for {entry.resource_title}: {e}")
+                raise
         return resource_info
