@@ -177,7 +177,10 @@ class DownloadManager(metaclass=Singleton):
                 and download_task.download_path in transfer_task.target_path
             ):
                 self.uuid_set.add(transfer_task.uuid)
-                logger.debug(f"Linked [{download_task.url}] to {transfer_task.uuid}")
+                # logger.debug(f"Linked [{download_task.url}] to {transfer_task.uuid}")
+                logger.info(
+                    f"Linked [{download_task.url}] to {transfer_task.uuid}"
+                )
                 return transfer_task
         logger.warning(
             f"Can't find the transfer task of [{download_task.url}], retrying..."

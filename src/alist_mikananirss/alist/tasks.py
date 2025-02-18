@@ -1,28 +1,10 @@
 from __future__ import annotations
 
 import re
-import os
-import requests
-import tempfile
-import libtorrent as lt
 from abc import ABC
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
-from loguru import logger
-
-def download_torrent_file(torrent_url: str, temp_dir: str) -> str:
-    """ download torrent file to temp dir."""
-    response = requests.get(torrent_url)
-    torrent_file_path = os.path.join(temp_dir, "downloaded_file.torrent")
-    with open(torrent_file_path, 'wb') as file:
-        file.write(response.content)
-    return torrent_file_path
-
-def torrent2magnet(torrent_file_path: str) -> str:
-    """convert torrent file to magnet link."""
-    info = lt.torrent_info(torrent_file_path)
-    return lt.make_magnet_uri(info)
 
 # https://github.com/alist-org/alist/blob/86b35ae5cfec400871072356fec4dea88303195d/pkg/task/task.go#L27
 class AlistTaskStatus(Enum):
@@ -142,15 +124,7 @@ class AlistDownloadTask(AlistTask):
         match = re.match(DOWNLOAD_DES_PATTERN, self.description)
         if match:
             url = match.group(1)
-
-            # if url is a torrent file, convert it to magnet link
-            if url.endswith(".torrent"):
-                with tempfile.TemporaryDirectory() as temp_dir:
-                    torrent_file_path = download_torrent_file(url, temp_dir)
-                    url = torrent2magnet(torrent_file_path)
-
             download_path = match.group(2)
-            logger.info(f"Download task: {url} to {download_path}")
         else:
             raise InvalidTaskDescription(
                 f"Failed to get url and download path from task description: {self.description}"

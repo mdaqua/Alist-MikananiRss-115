@@ -1,6 +1,9 @@
 import asyncio
 import mimetypes
 import os
+import requests
+import tempfile
+import libtorrent as lt
 import urllib.parse
 from typing import Optional
 
@@ -18,6 +21,19 @@ from alist_mikananirss.alist.tasks import (
     AlistTransferTask,
 )
 
+
+def download_torrent_file(torrent_url: str, temp_dir: str) -> str:
+    """ download torrent file to temp dir."""
+    response = requests.get(torrent_url)
+    torrent_file_path = os.path.join(temp_dir, "downloaded_file.torrent")
+    with open(torrent_file_path, 'wb') as file:
+        file.write(response.content)
+    return torrent_file_path
+
+def torrent2magnet(torrent_file_path: str) -> str:
+    """convert torrent file to magnet link."""
+    info = lt.torrent_info(torrent_file_path)
+    return lt.make_magnet_uri(info)
 
 class AlistClientError(Exception):
     pass
@@ -74,6 +90,18 @@ class Alist:
         urls: list[str],
         policy: AlistDeletePolicy = AlistDeletePolicy.DeleteAlways,
     ) -> list[AlistDownloadTask]:
+        # 115 Cloud downloader only support magnet link
+        if self.downloader == AlistDownloaderType.CLOUD_115:
+            temp_urls = []
+            # if url is a torrent file, convert it to magnet link
+            for url in urls:
+                if url.endswith(".torrent"):
+                    with tempfile.TemporaryDirectory() as temp_dir:
+                        temp_urls.append(torrent2magnet(download_torrent_file(url, temp_dir)))
+                else:
+                    temp_urls.append(url)
+            urls = temp_urls
+
         response_data = await self._api_call(
             "POST",
             "api/fs/add_offline_download",
