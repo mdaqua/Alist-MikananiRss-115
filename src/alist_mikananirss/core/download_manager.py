@@ -299,6 +299,10 @@ class DownloadManager(metaclass=Singleton):
         for resource in new_resources:
             download_path = self._build_download_path(resource)
             path_urls.setdefault(download_path, []).append(resource.torrent_url)
+        # check if the download path exists, if not, create it
+        for path in path_urls.keys():
+            if not await self.alist_client.is_folder_exist(path):
+                await self.alist_client.create_folder(path)
         # start to request the Alist Download API
         task_list = []
         for download_path, urls in path_urls.items():

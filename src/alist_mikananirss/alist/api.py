@@ -227,3 +227,37 @@ class Alist:
         await self._api_call(
             "POST", "api/fs/rename", json={"path": path, "name": new_name}
         )
+
+    async def is_folder_exist(self, path: str) -> bool:
+        """Check if a folder exists.
+
+        Args:
+            path (str): folder path
+
+        Returns:
+            dict: folder state
+        """
+        response_data = await self._api_call(
+            "POST",
+            "api/fs/dirs",
+            json={
+                "path": path
+            },
+        )
+        if response_data.code == 200:
+            return True
+        return False
+    
+    async def create_folder(self, path: str):
+        """Create folder.
+
+        Args:
+            path (str): folder path
+        """
+        await self._api_call(
+            "POST",
+            "api/fs/mkdir",
+            json={
+                "path": path
+            },
+        )
