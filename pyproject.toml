@@ -16,6 +16,8 @@ dependencies = [
     "python-telegram-bot>=21.9",
     "pyyaml>=6.0.2",
     "tenacity>=9.0.0",
+    "libtorrent>=2.0.11",
+    "requests>=2.32.3",
 ]
 
 [project.scripts]
