@@ -5,6 +5,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
+from loguru import logger
 
 
 # https://github.com/alist-org/alist/blob/86b35ae5cfec400871072356fec4dea88303195d/pkg/task/task.go#L27
@@ -125,6 +126,7 @@ class AlistDownloadTask(AlistTask):
         match = re.match(DOWNLOAD_DES_PATTERN, self.description)
         if match:
             url = match.group(1)
+            logger.error(f"URL: {url}")
             download_path = match.group(2)
         else:
             raise InvalidTaskDescription(

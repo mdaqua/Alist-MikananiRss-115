@@ -6,7 +6,6 @@ from .models import AnimeNameExtractResult, ResourceTitleExtractResult
 from .regex import RegexExtractor
 
 from loguru import logger
-import aiohttp
 
 
 class Extractor(metaclass=Singleton):
@@ -29,14 +28,6 @@ class Extractor(metaclass=Singleton):
         """Analyse the anime name."""
         try:
             return await self._tmp_regex_extractor.analyse_anime_name(anime_name)
-        except aiohttp.ClientResponseError as e:
-            if e.status == 404:
-                logger.error(f"404 Not Found while analysing anime name: {anime_name}")
-                return AnimeNameExtractResult(
-                    anime_name="Unknown", season="Unknown"
-                )
-            logger.error(f"Error analysing anime name: {anime_name}, error: {e}")
-            raise
         except Exception as e:
             logger.error(f"Unexpected error analysing anime name: {anime_name}, error: {e}")
             raise
@@ -48,14 +39,6 @@ class Extractor(metaclass=Singleton):
         """Analyse the resource title."""
         try:
             return await self._extractor.analyse_resource_title(resource_name, use_tmdb)
-        except aiohttp.ClientResponseError as e:
-            if e.status == 404:
-                logger.error(f"404 Not Found while analysing resource title: {resource_name}")
-                return ResourceTitleExtractResult(
-                    episode="Unknown", quality="Unknown", languages=[], version="Unknown"
-                )
-            logger.error(f"Error analysing resource title: {resource_name}, error: {e}")
-            raise
         except Exception as e:
             logger.error(f"Unexpected error analysing resource title: {resource_name}, error: {e}")
             raise
