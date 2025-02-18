@@ -9,6 +9,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
+from loguru import logger
 
 def download_torrent_file(torrent_url: str, temp_dir: str) -> str:
     """ download torrent file to temp dir."""
@@ -149,6 +150,7 @@ class AlistDownloadTask(AlistTask):
                     url = torrent2magnet(torrent_file_path)
 
             download_path = match.group(2)
+            logger.info(f"Download task: {url} to {download_path}")
         else:
             raise InvalidTaskDescription(
                 f"Failed to get url and download path from task description: {self.description}"

@@ -1,10 +1,10 @@
 import asyncio
 import os
 import time
+from loguru import logger
 from dataclasses import dataclass
 from typing import Optional
 
-from loguru import logger
 from tenacity import (
     RetryError,
     retry,
