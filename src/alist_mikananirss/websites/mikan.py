@@ -107,4 +107,5 @@ class Mikan(Website):
             except Exception as e:
                 logger.error(f"Error extracting additional info for {entry.resource_title}: {e}")
                 raise
+            
         return resource_info
