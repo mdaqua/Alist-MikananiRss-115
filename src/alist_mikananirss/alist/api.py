@@ -237,16 +237,23 @@ class Alist:
         Returns:
             dict: folder state
         """
-        response_data = await self._api_call(
-            "POST",
-            "api/fs/dirs",
-            json={
-                "path": path
-            },
-        )
-        if response_data.code == 200:
+        try:
+            response_data = await self._api_call(
+                "POST",
+                "api/fs/dirs",
+                json={
+                    "path": path
+                },
+            )
             return True
-        return False
+        except AlistClientError as e:
+            if "not found" in str(e).lower():
+                return False
+            raise
+        except aiohttp.ClientResponseError as e:
+            if e.status == 404:
+                return False
+            raise
     
     async def create_folder(self, path: str):
         """Create folder.
