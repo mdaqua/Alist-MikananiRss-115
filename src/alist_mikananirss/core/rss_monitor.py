@@ -51,6 +51,7 @@ class RssMonitor:
                     )
                 except Exception as e:
                     logger.error(f"Pass {entry.resource_title} because of error: {e}")
+                    # logger.error(f"Entry attributes: {entry.__dict__}")
                     return None
                 remapper = RemapperManager.match(resource_info)
                 if remapper:
